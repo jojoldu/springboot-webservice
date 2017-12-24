@@ -20,18 +20,22 @@ Java는 대부분 로컬에서 CRUD & localhost:8080으로 게시판 구축하�
 * IDE : IntelliJ IDEA Ultimate
 * Git Tools : Source Tree
 * OS : Mac OS X
-* SpringBoot 1.5.x
+* SpringBoot 1.5.9
 * Java8
 * Gradle
-
 
 글 사이사이 캡쳐들이 윈도우 & Eclipse 쓰시는 분들과 조금 차이가 있을수 있습니다.  
 이점 감안 부탁드립니다.  
 
 ### 커리큘럼
 
-큰 틀에선 아래 커리큘럼에 맞춰 진행합니다.
+큰 틀에선 아래 커리큘럼에 맞춰 진행합니다.  
+각 커리큘럼의 코드는 브랜치로 관리합니다.  
 
+![브랜치관리](./tutorial/images/브랜치관리.png)
+
+(feature/1은 1과정의 코드가 있습니다.)  
+  
 1. [SpringBoot & Gradle & Github 프로젝트 생성하기](./tutorial/1_프로젝트생성.md)
 2. SpringBoot & JPA로 CRUD 게시판 생성하기
 3. AWS EC2 & AWS RDS 운영 환경 구축
@@ -43,3 +47,5 @@ Java는 대부분 로컬에서 CRUD & localhost:8080으로 게시판 구축하�
 
 진행함에 따라 조금씩 변경이 있을수도 있습니다.  
 (책이 아닌 블로그의 장점!?)  
+내용을 수정하거나, 추가되거나, 삭제되거나 등이 발생할 수 있습니다.  
+언제든지 변경할 수 있기 때문에, 문제를 발견하신 분들은 가감없이 댓글이나 PR을 부탁드리겠습니다.  
