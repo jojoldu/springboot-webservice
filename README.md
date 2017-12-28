@@ -37,7 +37,7 @@ Java는 대부분 로컬에서 CRUD & localhost:8080으로 게시판 구축하�
 (feature/1은 1과정의 코드가 있습니다.)  
   
 1. [SpringBoot & Gradle & Github 프로젝트 생성하기](./tutorial/1_프로젝트생성.md)
-2. SpringBoot & JPA로 CRUD 게시판 생성하기
+2. [SpringBoot & JPA로 간단 API 만들기](./tutorial/2_게시판만들기.md)
 3. AWS EC2 & AWS RDS 운영 환경 구축
 4. Google GSuite & AWS로 도메인, Email 할당 받기
 5. Nginx & SSL 설치하기

@@ -10,8 +10,6 @@ import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
 
 /**
  * Created by jojoldu@gmail.com on 2017. 12. 23.
