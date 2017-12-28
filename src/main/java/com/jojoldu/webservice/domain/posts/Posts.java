@@ -1,5 +1,6 @@
 package com.jojoldu.webservice.domain.posts;
 
+import com.jojoldu.webservice.domain.BaseTimeEntity;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
@@ -21,7 +22,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Getter
 @Entity
-public class Posts {
+public class Posts extends BaseTimeEntity {
 
     @Id
     @GeneratedValue
@@ -34,15 +35,11 @@ public class Posts {
     private String content;
 
     private String author;
-    private LocalDateTime createdTime;
-    private LocalDateTime updatedTime;
 
     @Builder
-    public Posts(String title, String content, String author, LocalDateTime createdTime, LocalDateTime updatedTime) {
+    public Posts(String title, String content, String author) {
         this.title = title;
         this.content = content;
         this.author = author;
-        this.createdTime = createdTime;
-        this.updatedTime = updatedTime;
     }
 }
