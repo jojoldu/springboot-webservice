@@ -1,7 +1,7 @@
 package com.jojoldu.webservice.service;
 
-import com.jojoldu.webservice.domain.posts.Posts;
 import com.jojoldu.webservice.domain.posts.PostsRepository;
+import com.jojoldu.webservice.dto.posts.PostsSaveRequestDto;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -18,8 +18,8 @@ public class PostsService {
     private PostsRepository postsRepository;
 
     @Transactional
-    public void save(Posts entity){
-        postsRepository.save(entity);
+    public void save(PostsSaveRequestDto dto){
+        postsRepository.save(dto.toEntity());
     }
 
 }
