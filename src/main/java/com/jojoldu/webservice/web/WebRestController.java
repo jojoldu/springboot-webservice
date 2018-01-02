@@ -26,7 +26,7 @@ public class WebRestController {
     }
 
     @PostMapping("/posts")
-    public void savePosts(@RequestBody PostsSaveRequestDto dto){
-        postsService.save(dto);
+    public Long savePosts(@RequestBody PostsSaveRequestDto dto){
+        return postsService.save(dto);
     }
 }
