@@ -206,6 +206,8 @@ sudo yum update
 EC2 관련된 설정이 모두 끝이났습니다!  
 바로 RDS 설정을 진행하겠습니다.
 
+[[ad]]
+
 ## 4-2. AWS RDS 설정하기
 
 이제 AWS의 Database 서비스인 RDS를 생성하겠습니다.  
@@ -292,7 +294,7 @@ MariaDB 인스턴스를 클릭 -> 우측의 탐색 탭을 클릭해보시면 아
 
 ![rds12](./images/4/rds12.png)
 
-### 2) 접근 확인 
+### 2) 로컬PC에서 RDS 접근 확인 
 
 RDS가 생성되었으니, 설정이 잘되었는지 확인해보겠습니다.  
 본인의 PC OS에 맞춰 MySQL 혹은 범용적인 DB 클라이언트를 사용하시면 됩니다.  
@@ -354,10 +356,101 @@ RDS 인스턴스 수정 페이지로 이동하신뒤,
 
 ![rds21](./images/4/rds21.png)
 
-DB 인스턴스 수정이 완료 되시면 설정 적용을 위해 **재시작**합니다.
+DB 인스턴스 수정이 완료 되시면 설정 적용을 위해 **재부팅**합니다.
 
 ![rds22](./images/4/rds22.png)
 
-## 4-3. SpringBoot 배포
+재부팅이 완료되시면 클라이언트 툴에서도 다시 재접속해서 설정값을 확인해봅니다.
+
+```sql
+show variables like 'c%';
+```
+
+![rds23](./images/4/rds23.png)
+
+위 사진을 보시면 아직 database 관련 설정에선 utf8이 적용 안된것을 알수 있습니다.  
+이 부분은 파라미터 그룹으로 해결이 안되고, 직접 설정값을 적용해야만 합니다. (참고: [링크](![rds22](./images/4/rds22.png)))  
+  
+그래서 직접 명령어를 실행시킵니다.
+
+```sql
+ALTER DATABASE 본인database
+CHARACTER SET = 'utf8'
+COLLATE = 'utf8_general_ci';
+```
+
+짠! utf8이 모두 적용된 것이 확인됩니다.
+
+![rds24](./images/4/rds24.png)
+
+깔끔한 적용을 위해 **재부팅**을 다시 실행해주시면 끝!  
+  
+자 그럼 실제로 한번 테스트 해보겠습니다.  
+로컬의 클라이언트에서 다음의 쿼리를 하나씩 실행해보겠습니다.
+
+```sql
+
+CREATE TABLE test (
+  id bigint(20) NOT NULL AUTO_INCREMENT,
+  content varchar(255) DEFAULT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB;
+
+insert into test(content) values ('테스트');
+
+select * from test;
+```
+
+그러면!
+
+![rds25](./images/4/rds25.png)
+
+쿼리가 잘 수행되고, 한글 노출이 잘되는 것까지 확인됩니다!
+마지막으로 EC2에서 접근이 잘되는지 확인하겠습니다.
+
+### 3) EC2에서 RDS에서 접근 확인 
+
+기존에 생성해둔 EC2 서버로 ssh 접속합니다.
+
+```bash
+ssh config에 지정한 이름
+```
+
+그리고 mysql CLI 설치를 위해 mysql을 EC2에 설치하겠습니다.  
+(실제 EC2의 MySQL을 설치해서 쓰는게 아닌, 커맨드 라인만 쓰기 위한 설치입니다.)  
+
+![rds26](./images/4/rds26.png)
+
+```bash
+sudo yum install mysql
+```
+
+설치가 다 되셨으면 로컬에서 접근하듯이 계정, 비밀번호, 호스트 주소를 사용해 RDS에 접속합니다.
+
+```bash
+mysql -u 계정 -p -h Host주소
+```
+
+![rds27](./images/4/rds27.png)
+
+RDS에 접속되셨으면 실제로 생성한 RDS가 맞는지 간단한 쿼리를 한번 실행해보겠습니다.
+
+```sql
+show databases;
+```
+
+![rds28](./images/4/rds28.png)
+
+제가 생성했던 webservice라는 database가 있음을 확인하였습니다!  
+  
+이번 시간에는 EC2와 RDS 생성 및 기본적인 설정을 진행했습니다.  
+직접 코드를 치는게 아니라서 아무래도 지루하셨을수도 있을것 같습니다.  
+그럼에도 끝까지 읽어주셔서 감사합니다.  
+다음 시간에는 1~3차에서 생성한 **스프링부트 프로젝트를 EC2 서버에 간단하게나마 배포**하고, **RDS에 접근하는 방법**을 진행하겠습니다.  
+  
+그럼 다음에 뵙겠습니다!  
+감사합니다^^
+
+
 
 
