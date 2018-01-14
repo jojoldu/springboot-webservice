@@ -40,11 +40,10 @@ Java는 대부분 로컬에서 CRUD & localhost:8080으로 게시판 구축하�
 2. [SpringBoot & JPA로 간단 API 만들기](./tutorial/2_게시판만들기.md)
 3. [SpringBoot & Handlebars로 화면 만들기](./tutorial/3_게시판만들기2.md)
 4. [AWS EC2 & AWS RDS 운영 환경 구축](./tutorial/4_AWS운영환경구축.md)
-5. Google GSuite & AWS로 도메인, Email 할당 받기
-6. Nginx & SSL 설치하기
-7. AWS CodeDeploy & TravisCI 무중단 배포 구축하기
-8. AWS ElastiCache로 세션공유하기
-9. 기타 Tips
+5. TravisCI & AWS CodeDeploy로 배포 자동화 구축하기  
+6. Nginx & SSL 설치 및 무중단 배포 구축하기
+7. Google GSuite & AWS로 도메인, Email 할당 받기
+8. 기타 Tips
 
 진행함에 따라 조금씩 변경이 있을수도 있습니다.  
 (책이 아닌 블로그의 장점!?)  

@@ -2,7 +2,7 @@
 /build/
 !gradle/wrapper/gradle-wrapper.jar
 /out
-
+scp.sh
 ### STS ###
 .apt_generated
 .classpath
