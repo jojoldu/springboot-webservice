@@ -1,4 +1,4 @@
-# SpringBoot로 웹서비스 개발하기
+# SpringBoot로 웹서비스 개발하기 [![Build Status](https://travis-ci.org/jojoldu/springboot-webservice.svg?branch=master)](https://travis-ci.org/jojoldu/springboot-webservice)
 
 많은 웹 서비스 구축하기 강좌들이 Python, NodeJS, Ruby, PHP만 다루고 있습니다.  
 반면 국내에서 가장 많이 사용하는 언어인 **Java로 웹서비스 구축강좌는 본적이 없습니다**.  
