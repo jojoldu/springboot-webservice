@@ -485,26 +485,32 @@ notifications:
       - jojoldu@gmail.com
 ``` 
 
-자 이렇게 변경후 다시 Git Commit & Push를 해보겠습니다.
+자 이렇게 변경후 다시 Git Commit & Push를 해보겠습니다.  
+그리고 다시 S3를 확인해보시면!
 
+![codedeploy5](./images/6/codedeploy5.png)
+
+zip파일이 전송된것을 확인할 수 있습니다.  
+zip파일 외에는 이제 필요없으니 다 지우셔도 됩니다.  
+Travis CI와 S3까지 연동되었습니다!
 
 ### 6-4-2. Travis CI & S3 & CodeDeploy 연동
 
 이제는 Travis CI와 S3, CodeDeploy까지 같이 연동해보겠습니다.  
 먼저 AWS 웹 콘솔에서 **CodeDeploy**를 검색해서 이동합니다.  
 
-![codedeploy5](./images/6/codedeploy5.png)
+![codedeploy6](./images/6/codedeploy6.png)
 
 리전이 **서울**인지 확인하신뒤, **애플리케이션 생성**버튼을 클릭합니다.  
 아래와 같이 설정합니다.
 
-![codedeploy6](./images/6/codedeploy6.png)
-
 ![codedeploy7](./images/6/codedeploy7.png)
+
+![codedeploy8](./images/6/codedeploy8.png)
 
 가장 마지막 설정값들은 아래와 같습니다.
 
-![codedeploy8](./images/6/codedeploy8.png)
+![codedeploy9](./images/6/codedeploy9.png)
 
 여기서 ARN은 기존에 생성해둔 ```CodeDeployRole```을 선택하셔야 합니다.  
 (```EC2CodeDeployRole```이 아닙니다.)  
