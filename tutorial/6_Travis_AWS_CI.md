@@ -515,24 +515,39 @@ Travis CI와 S3까지 연동되었습니다!
 여기서 ARN은 기존에 생성해둔 ```CodeDeployRole```을 선택하셔야 합니다.  
 (```EC2CodeDeployRole```이 아닙니다.)  
   
-AWS CodeDeploy 설정이 끝나셨으면, EC2로 접속해서 S3에서 결과를 받아올 디렉토리 하나를 생성하겠습니다.  
+AWS CodeDeploy 설정이 끝나셨으면, EC2로 접속해서 S3에서 zip를 받아올 디렉토리 하나를 생성하겠습니다.  
 
 ```bash
 mkdir /home/ec2-user/app/travis
 mkdir /home/ec2-user/app/travis/build
 ```
 
-TravisCI가 Build가 끝나면 S3로 Build로 결과물
+TravisCI가 Build가 끝나면 S3에 zip 파일이 전송되고, 이 zip파일은 ```/home/ec2-user/app/travis/build```로 복사되어 압축을 풀 예정입니다.  
+  
+TravisCI의 설정은 ```.travis.yml```로 진행했었는데요.  
+AWS CodeDeploy의 설정은 ```appspec.yml```로 진행됩니다.  
 
+![codedeploy10](./images/6/codedeploy10.png)
+
+코드는 아래와 같습니다.
 
 ```yaml
 version: 0.0
 os: linux
 files:
   - source:  /
-    destination: /home/ec2-user/app/travis/
+    destination: /home/ec2-user/app/travis/build/
 ```
 
+* ```version: 0.0```
+  * CodeDeploy 버전을 얘기합니다.
+  * 프로젝트 버전이 아니기 때문에 **0.0 외에 다른 버전을 사용하시면 오류가 발생**합니다.
+* ```source```
+  * S3 버킷에서 복사할 파일의 위치를 나타냅니다.
+* ```destination```
+  * zip 파일을 복사해 압축을 풀 위치를 지정합니다.
+
+그리고 TravisCI가 CodeDeploy도 실행시키도록 아래와 같이 ```.travis.yml```에 설정을 추가합니다.
 
 ```yaml
   - provider: codedeploy
@@ -549,6 +564,71 @@ files:
       repo: jojoldu/springboot-webservice
       branch: master
 ```
+
+최종 ```.travis.yml```의 코드는 아래와 같습니다.
+
+```yaml
+language: java
+jdk:
+  - openjdk8
+
+branches:
+  only:
+    - master
+
+# Travis CI 서버의 Home
+cache:
+  directories:
+    - '$HOME/.m2/repository'
+    - '$HOME/.gradle'
+
+script: "./gradlew clean build"
+
+before_deploy:
+  - zip -r springboot-webservice *
+  - mkdir -p deploy
+  - mv springboot-webservice.zip deploy/springboot-webservice.zip
+
+deploy:
+  - provider: s3
+    access_key_id: $AWS_ACCESS_KEY # Travis repo settings에 설정된 값
+    secret_access_key: $AWS_SECRET_KEY # Travis repo settings에 설정된 값
+    bucket: springboot-webservice-deploy # S3 버킷
+    region: ap-northeast-2
+    skip_cleanup: true
+    acl: public_read
+    local_dir: deploy # before_deploy에서 생성한 디렉토리
+    wait-until-deployed: true
+    on:
+      repo: jojoldu/springboot-webservice
+      branch: master
+
+  - provider: codedeploy
+    access_key_id: $AWS_ACCESS_KEY # Travis repo settings에 설정된 값
+    secret_access_key: $AWS_SECRET_KEY # Travis repo settings에 설정된 값
+    bucket: springboot-webservice-deploy # S3 버킷
+    key: springboot-webservice.zip # S3 버킷에 저장된 springboot-webservice.zip 파일을 EC2로 배포
+    bundle_type: zip
+    application: springboot-webservice # 웹 콘솔에서 등록한 CodeDeploy 어플리케이션
+    deployment_group: springboot-webservice-group # 웹 콘솔에서 등록한 CodeDeploy 배포 그룹
+    region: ap-northeast-2
+    wait-until-deployed: true
+    on:
+      repo: jojoldu/springboot-webservice
+      branch: master
+
+notifications:
+  email:
+    recipients:
+      - jojoldu@gmail.com
+```
+
+여기까지 수행되셨으면 다시 Git Commit & Push를 진행합니다!
+
+
+### 6-4-3. CodeDeploy로 스크립트 실행
+
+
 
 > Tip)  
 TravisCI와 다른 클라우드 서비스 (Azure, GCP, Heroku 등)가 연동하는 방법은 [공식 문서](https://docs.travis-ci.com/user/deployment/codedeploy/)를 참고하시길 추천드립니다.
