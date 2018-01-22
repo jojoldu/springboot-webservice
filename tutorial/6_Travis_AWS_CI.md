@@ -98,7 +98,7 @@ notifications:
   * 여기선 프로젝트 내부에 둔 gradlew을 통해 **clean & build 를 수행**합니다.  
 * notifications
   * Travis CI 실행 완료시 자동으로 알람이 가도록 설정합니다.
-  * Email외에도 Slack이 있으니, 관심있으신 분들은 [링크](http://deptno.github.io/posts/2016/github-travis-ci/)를 참고하여 Slack도 추가하시는걸 추천드립니다.
+  * Email외에도 Slack이 있으니, 관심있으신 분들은 [링크1](http://deptno.github.io/posts/2016/github-travis-ci/), [링크2](https://blog.travis-ci.com/2014-03-13-slack-notifications)를 참고하여 Slack도 추가하시는걸 추천드립니다.
 
 자 그럼 여기까지 하신뒤, master 브랜치에 commit & push 하신뒤, 좀전의 Travis CI 저장소 페이지를 확인합니다.
 
@@ -295,6 +295,7 @@ sudo aws configure
 * Secret Access Key
 * region name
   * ```ap-northeast-2```
+  * 서울 리전을 얘기합니다.
 * output format
   * ```json```
 
@@ -354,9 +355,72 @@ sudo service codedeploy-agent start
 
 스크립트 파일을 저장(```:wq```) 하시면 AWS의 설정이 끝납니다!  
 
-## 6-4. travis.yml & appspec.yml 설정
+## 6-4. .travis.yml & appspec.yml 설정
+
+Travis CI와 AWS CodeDeploy 둘 모두 젠킨스와 같은 설치형이 아니라서, 상세한 설정은 **프로젝트 내에 존재**하는 ```.yml```로 관리합니다.  
 
 
+### 6-4-1. Travis CI & S3 연동
+
+CodeDeploy는 저장 기능이 없습니다.  
+그래서 **Travis CI가 Build 한 결과물을 받아서 CodeDeploy가 가져갈 수 있도록 보관할 수 있는 공간**이 필요합니다.  
+보통은 이럴때 **AWS S3**를 이용합니다.  
+프로젝트 내부에 ```.travis.yml```파일을 생성하고 아래의 코드를 추가합니다.
+
+```yaml
+deploy:
+  - provider: s3
+    access_key_id: $AWS_ACCESS_KEY # Travis repo settings에 설정된 값
+    secret_access_key: $AWS_SECRET_KEY # Travis repo settings에 설정된 값
+    bucket: springboot-webservice-deploy # S3 버킷
+    region: ap-northeast-2
+    skip_cleanup: true
+    local_dir: deploy
+    acl: public_read
+    wait-until-deployed: true
+    on:
+      repo: jojoldu/springboot-webservice
+      branch: master
+```
+
+여기 설정값을 보시면 ```$AWS_ACCESS_KEY```, ```$AWS_SECRET_KEY```가 있습니다.  
+이는 저희가 csv로 받았던 access key와 secret key를 나타내는데요.  
+가장 간단하게 구현한다면 여기에 직접 값을 할당해도 됩니다.  
+하지만 그렇게 할 경우 Github에 AWS access key와 secret key가 노출되기 때문에 절대 그렇게 하시면 안됩니다.  
+대신에, Travis CI에서 이런 중요한 키 값을 관리하도록 두고, Travis CI가 실행시점에 값을 사용할 수 있도록 지정한것이 ```$AWS_ACCESS_KEY```, ```$AWS_SECRET_KEY``` 라고 보시면 됩니다.  
+  
+Travis CI로 가셔서 우측 상단의 **More Options** -> **Settings**을 클릭합니다.
+
+![codedeploy1](./images/6/codedeploy1.png)
+
+
+설정화면을 아래로 조금 내려보시면 **Environment Variables** 항목이 있습니다.  
+여기에 ```AWS_ACCESS_KEY```, ```AWS_SECRET_KEY```를 변수로 해서 **6-3-2**에서 받은 키 값들을 등록합니다.
+
+![codedeploy2](./images/6/codedeploy2.png)
+
+여기에 등록된 값들은 이제 ```.travis.yml``` 에서 ```$AWS_ACCESS_KEY```, ```$AWS_SECRET_KEY```란 이름으로 사용할 수 있습니다.  
+(쉘 스크립트에서 변수를 사용했던것과 비슷하죠?)  
+  
+
+### 6-4-2. appspec.yml 설정
+
+
+```yaml
+version: 0.0
+os: linux
+files:
+  - source:  /
+    destination: /home/ec2-user/app/build/
+
+hooks:
+  AfterInstall:
+    - location: scripts/code-deploy.sh
+      timeout: 180
+```
+
+> Tip)  
+TravisCI와 다른 클라우드 서비스 (Azure, GCP, Heroku 등)가 연동하는 방법은 [공식 문서](https://docs.travis-ci.com/user/deployment/codedeploy/)를 참고하시길 추천드립니다.
 
 ## 참고
 

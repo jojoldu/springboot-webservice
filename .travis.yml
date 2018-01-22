@@ -14,6 +14,20 @@ cache:
 
 script: "./gradlew clean build"
 
+deploy:
+  - provider: s3
+    access_key_id: $AWS_ACCESS_KEY # Travis repo settings에 설정된 값
+    secret_access_key: $AWS_SECRET_KEY # Travis repo settings에 설정된 값
+    bucket: springboot-webservice-deploy # S3 버킷
+    region: ap-northeast-2
+    skip_cleanup: true
+    local_dir: deploy
+    acl: public_read
+    wait-until-deployed: true
+    on:
+      repo: jojoldu/springboot-webservice
+      branch: master
+
 notifications:
   email:
     recipients:
