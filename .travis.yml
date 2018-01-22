@@ -21,7 +21,6 @@ deploy:
     bucket: springboot-webservice-deploy # S3 버킷
     region: ap-northeast-2
     skip_cleanup: true
-    local_dir: deploy
     acl: public_read
     wait-until-deployed: true
     on:
