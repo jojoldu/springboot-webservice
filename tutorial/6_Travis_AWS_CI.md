@@ -1,4 +1,4 @@
-# 5. TravisCI & AWS CodeDeploy로 배포 자동화 구축하기
+# 6. TravisCI & AWS CodeDeploy로 배포 자동화 구축하기
 
 이번 시간엔 배포 자동화 환경을 구축하겠습니다.
 (모든 코드는 [Github](https://github.com/jojoldu/springboot-webservice/tree/feature/6)에 있습니다.)  
