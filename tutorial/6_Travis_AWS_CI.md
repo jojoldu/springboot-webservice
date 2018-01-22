@@ -449,7 +449,7 @@ version: 0.0
 os: linux
 files:
   - source:  /
-    destination: /home/ec2-user/app/build/
+    destination: /home/ec2-user/app/travis/
 ```
 
 
@@ -460,8 +460,8 @@ files:
     bucket: springboot-webservice-deploy # S3 버킷
     key: springboot-webservice.zip # 빌드 파일을 압축해서 전달
     bundle_type: zip
-    application: devbeginner-group # 웹 콘솔에서 등록한 CodeDeploy 어플리케이션
-    deployment_group: devbeginner # 웹 콘솔에서 등록한 CodeDeploy 배포 그룹
+    application: springboot-webservice # 웹 콘솔에서 등록한 CodeDeploy 어플리케이션
+    deployment_group: springboot-webservice-group # 웹 콘솔에서 등록한 CodeDeploy 배포 그룹
     region: ap-northeast-2
     wait-until-deployed: true
     on:
