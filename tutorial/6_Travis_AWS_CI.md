@@ -625,9 +625,145 @@ notifications:
 
 여기까지 수행되셨으면 다시 Git Commit & Push를 진행합니다!
 
+CodeDeploy 웹 콘솔에서도 배포 진행과정을 확인할 수 있습니다.
+
+![codedeploy11](./images/6/codedeploy11.png)
+
+![codedeploy12](./images/6/codedeploy12.png)
+
+배포가 성공적으로 완료되시면!
+
+![codedeploy13](./images/6/codedeploy13.png)
+
+
+아름다운 **성공** 메세지를 볼 수 있습니다!  
+EC2에 접속해서 배포가 잘 되었는지 확인해보겠습니다.  
+
+```bash
+cd /home/ec2-user/app/travis/build
+ll
+```
+
+![codedeploy14](./images/6/codedeploy14.png)
+
+저희가 작성한 코드가 Git Push만으로 EC2에 전송까지 자동으로 진행되었습니다!
 
 ### 6-4-3. CodeDeploy로 스크립트 실행
 
+코드만 전달되었다고해서 배포가 끝은 아니겠죠?  
+**application.jar 파일을 실행**시키는것까지 되어야 합니다.  
+그래서 EC2에 **AWS CodeDeploy로 받은 파일을 실행**시키는 배포 스크립트를 생성하겠습니다.  
+먼저 jar파일들을 모아둘 디렉토리를 하나 생성합니다.
+
+```bash
+mkdir /home/ec2-user/app/travis/jar
+```
+
+그리고 jar 디렉토리에 옮겨진 application.jar를 실행시킬 ```deploy.sh``` 파일을 하나 생성합니다.
+
+```bash
+vim /home/ec2-user/app/travis/deploy.sh
+```
+
+스크립트의 코드는 아래와 같습니다.
+
+```bash
+#!/bin/bash
+
+REPOSITORY=/home/ec2-user/app/travis
+
+echo "> 현재 구동중인 애플리케이션 pid 확인"
+
+CURRENT_PID=$(pgrep -f springboot-webservice)
+
+echo "$CURRENT_PID"
+
+if [ -z $CURRENT_PID ]; then
+    echo "> 현재 구동중인 애플리케이션이 없으므로 종료하지 않습니다."
+else
+    echo "> kill -15 $CURRENT_PID"
+    kill -15 $CURRENT_PID
+    sleep 5
+fi
+
+echo "> 새 어플리케이션 배포"
+
+echo "> Build 파일 복사"
+
+cp $REPOSITORY/build/build/libs/*.jar $REPOSITORY/jar/
+
+JAR_NAME=$(ls $REPOSITORY/jar/ |grep 'springboot-webservice' | tail -n 1)
+
+echo "> JAR Name: $JAR_NAME"
+
+nohup java -jar $REPOSITORY/jar/$JAR_NAME &
+```
+
+[이전에](http://jojoldu.tistory.com/263) 작성된 git/deploy.sh와 크게 다르지 않습니다.  
+단지, ```git pull```해서 직접 build했던 부분을 제거하고, 이미 받아놓은 build 파일을 복사해 실행하는것만 다릅니다.  
+  
+일단 이 스크립트가 잘 작동되는지 먼저 테스트해보겠습니다.  
+아래 명령어로 이미 받아놓은 build 파일들로 실행이 잘되는지 테스트합니다.
+
+```bash
+/home/ec2-user/app/travis/deploy.sh
+```
+
+![codedeploy15](./images/6/codedeploy15.png)
+
+스크립트가 정상적으로 실행되는게 확인되었습니다!  
+자 그럼 **AWS CodeDeploy가 배포가 끝나면, ```deploy.sh```를 실행**하도록 설정을 변경하겠습니다.  
+  
+이전에 생성한 ```appspec.yml```에 아래 코드를 추가합니다.
+
+```yaml
+hooks:
+  AfterInstall: # 배포가 끝나면 아래 명령어를 실행
+    - location: execute-deploy.sh
+      timeout: 180
+```
+
+전체 코드는 아래와 같습니다.
+
+```yaml
+version: 0.0
+os: linux
+files:
+  - source:  /
+    destination: /home/ec2-user/app/travis/build/
+
+hooks:
+  AfterInstall: # 배포가 끝나면 아래 명령어를 실행
+    - location: execute-deploy.sh
+      timeout: 180
+```
+
+CodeDeploy에서 바로 ```deploy.sh```를 실행시킬수 없어 우회하는 방법으로 ```deploy.sh```를 실행하는 ```execute-deploy.sh```파일을 실행하도록 설정하였습니다.  
+기타 yml들과 마찬가지로 ```execute-deploy.sh``` 역시 프로젝트 내부에 생성해서 CodeDeploy가 실행할수 있도록 합니다.  
+스크립트의 코드는 아래가 전부입니다.
+
+```bash
+#!/bin/bash
+/home/ec2-user/app/travis/deploy.sh > /dev/null 2> /dev/null < /dev/null &
+```
+
+deploy.sh를 백그라운드로 실행한뒤, 로그나 기타 내용을 남기지 않도록 처리하였습니다.  
+자 그래서 프로젝트 전체 구조를 보면 아래와 같이 됩니다.
+
+![codedeploy16](./images/6/codedeploy16.png)
+
+모든 설정이 완료되었습니다!  
+진짜 배포처럼 한번 진행해보겠습니다.  
+
+### 6-4-4. 실제 배포 과정 진행
+
+build.gradle에서 프로젝트 버전을 변경합니다.
+
+![codedeploy17](./images/6/codedeploy17.png)
+
+간단하게나마 변경된 내용을 알 수 있게 src/main/resources/templates/main.hbs 내용에 아래와 같이 ```Ver.2```를 추가합니다.
+
+![codedeploy18](./images/6/codedeploy18.png)
 
 
 > Tip)  
