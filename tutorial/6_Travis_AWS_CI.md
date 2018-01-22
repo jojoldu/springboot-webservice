@@ -411,7 +411,82 @@ AWS S3에 저희가 지정한 버킷 (```springboot-webservice-deploy```)에 bui
 
 ![codedeploy4](./images/6/codedeploy4.png)
 
-Travis CI와 S3가 아주 잘 연동되었습니다!
+여기서! 매번 Travis CI에서 파일을 하나하나 복사하는건 복사시간이 많이 걸리기 때문에 **프로젝트 폴더 채로 압축**해서 S3로 전달하도록 설정을 조금 추가하겠습니다.
+
+```yaml
+
+...
+before_deploy:
+  - zip -r springboot-webservice *
+  - mkdir -p deploy
+  - mv springboot-webservice.zip deploy/springboot-webservice.zip
+
+deploy:
+  - provider: s3
+    ...
+    local_dir: deploy # before_deploy에서 생성한 디렉토리
+    ...
+```
+
+* ```before_deploy```
+  * ```zip -r springboot-webservice```
+    * 현재 위치의 모든 파일을 ```springboot-webservice```이름으로 압축(zip)
+  * ```mkdir -p deploy```
+    * deploy라는 디렉토리를 Travis CI가 실행중인 위치에서 생성
+  * ```mv springboot-webservice.zip deploy/springboot-webservice.zip```
+    * springboot-webservice.zip 파일을 deploy/springboot-webservice.zip로 이동 
+
+* ```deploy```
+  * ```local_dir: deploy```
+    * 앞에서 생성한 deploy 디렉토리
+    * 해당 디렉토리(```deploy```) 내용들만 S3로 전송
+
+그래서 전체 ```.travis.yml``` 코드는 아래와 같습니다.
+
+```yaml
+language: java
+jdk:
+  - openjdk8
+
+branches:
+  only:
+    - master
+
+# Travis CI 서버의 Home
+cache:
+  directories:
+    - '$HOME/.m2/repository'
+    - '$HOME/.gradle'
+
+script: "./gradlew clean build"
+
+before_deploy:
+  - zip -r springboot-webservice *
+  - mkdir -p deploy
+  - mv springboot-webservice.zip deploy/springboot-webservice.zip
+
+deploy:
+  - provider: s3
+    access_key_id: $AWS_ACCESS_KEY # Travis repo settings에 설정된 값
+    secret_access_key: $AWS_SECRET_KEY # Travis repo settings에 설정된 값
+    bucket: springboot-webservice-deploy # S3 버킷
+    region: ap-northeast-2
+    skip_cleanup: true
+    acl: public_read
+    local_dir: deploy # before_deploy에서 생성한 디렉토리
+    wait-until-deployed: true
+    on:
+      repo: jojoldu/springboot-webservice
+      branch: master
+
+notifications:
+  email:
+    recipients:
+      - jojoldu@gmail.com
+``` 
+
+자 이렇게 변경후 다시 Git Commit & Push를 해보겠습니다.
+
 
 ### 6-4-2. Travis CI & S3 & CodeDeploy 연동
 
