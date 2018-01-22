@@ -372,15 +372,15 @@ deploy:
   - provider: s3
     access_key_id: $AWS_ACCESS_KEY # Travis repo settings에 설정된 값
     secret_access_key: $AWS_SECRET_KEY # Travis repo settings에 설정된 값
-    bucket: springboot-webservice-deploy # S3 버킷
+    bucket: springboot-webservice-deploy # 6-3-3에서 생성한 S3 버킷
     region: ap-northeast-2
     skip_cleanup: true
-    local_dir: deploy
     acl: public_read
     wait-until-deployed: true
     on:
-      repo: jojoldu/springboot-webservice
+      repo: jojoldu/springboot-webservice #Github 주소
       branch: master
+
 ```
 
 여기 설정값을 보시면 ```$AWS_ACCESS_KEY```, ```$AWS_SECRET_KEY```가 있습니다.  
@@ -393,7 +393,6 @@ Travis CI로 가셔서 우측 상단의 **More Options** -> **Settings**을 클�
 
 ![codedeploy1](./images/6/codedeploy1.png)
 
-
 설정화면을 아래로 조금 내려보시면 **Environment Variables** 항목이 있습니다.  
 여기에 ```AWS_ACCESS_KEY```, ```AWS_SECRET_KEY```를 변수로 해서 **6-3-2**에서 받은 키 값들을 등록합니다.
 
@@ -402,8 +401,47 @@ Travis CI로 가셔서 우측 상단의 **More Options** -> **Settings**을 클�
 여기에 등록된 값들은 이제 ```.travis.yml``` 에서 ```$AWS_ACCESS_KEY```, ```$AWS_SECRET_KEY```란 이름으로 사용할 수 있습니다.  
 (쉘 스크립트에서 변수를 사용했던것과 비슷하죠?)  
   
+여기까지만 진행후, 실제로 연동되는지 테스트를 한번 해보겠습니다.  
+Travis와는 이미 연동된 상태이니, 현재까지 내용을 담아 master 브랜치로 Commit & Push 하겠습니다.  
+그러면 TravisCI가 Build가 실행되니, 성공적으로 끝나면
 
-### 6-4-2. appspec.yml 설정
+![codedeploy3](./images/6/codedeploy3.png)
+
+AWS S3에 저희가 지정한 버킷 (```springboot-webservice-deploy```)에 build 결과가 전송되었음을 알 수 있습니다.
+
+![codedeploy4](./images/6/codedeploy4.png)
+
+Travis CI와 S3가 아주 잘 연동되었습니다!
+
+### 6-4-2. Travis CI & S3 & CodeDeploy 연동
+
+이제는 Travis CI와 S3, CodeDeploy까지 같이 연동해보겠습니다.  
+먼저 AWS 웹 콘솔에서 **CodeDeploy**를 검색해서 이동합니다.  
+
+![codedeploy5](./images/6/codedeploy5.png)
+
+리전이 **서울**인지 확인하신뒤, **애플리케이션 생성**버튼을 클릭합니다.  
+아래와 같이 설정합니다.
+
+![codedeploy6](./images/6/codedeploy6.png)
+
+![codedeploy7](./images/6/codedeploy7.png)
+
+가장 마지막 설정값들은 아래와 같습니다.
+
+![codedeploy8](./images/6/codedeploy8.png)
+
+여기서 ARN은 기존에 생성해둔 ```CodeDeployRole```을 선택하셔야 합니다.  
+(```EC2CodeDeployRole```이 아닙니다.)  
+  
+AWS CodeDeploy 설정이 끝나셨으면, EC2로 접속해서 S3에서 결과를 받아올 디렉토리 하나를 생성하겠습니다.  
+
+```bash
+mkdir /home/ec2-user/app/travis
+mkdir /home/ec2-user/app/travis/build
+```
+
+TravisCI가 Build가 끝나면 S3로 Build로 결과물
 
 
 ```yaml
@@ -412,15 +450,36 @@ os: linux
 files:
   - source:  /
     destination: /home/ec2-user/app/build/
+```
 
-hooks:
-  AfterInstall:
-    - location: scripts/code-deploy.sh
-      timeout: 180
+
+```yaml
+  - provider: codedeploy
+    access_key_id: $AWS_ACCESS_KEY # Travis repo settings에 설정된 값
+    secret_access_key: $AWS_SECRET_KEY # Travis repo settings에 설정된 값
+    bucket: springboot-webservice-deploy # S3 버킷
+    key: springboot-webservice.zip # 빌드 파일을 압축해서 전달
+    bundle_type: zip
+    application: devbeginner-group # 웹 콘솔에서 등록한 CodeDeploy 어플리케이션
+    deployment_group: devbeginner # 웹 콘솔에서 등록한 CodeDeploy 배포 그룹
+    region: ap-northeast-2
+    wait-until-deployed: true
+    on:
+      repo: jojoldu/springboot-webservice
+      branch: master
 ```
 
 > Tip)  
 TravisCI와 다른 클라우드 서비스 (Azure, GCP, Heroku 등)가 연동하는 방법은 [공식 문서](https://docs.travis-ci.com/user/deployment/codedeploy/)를 참고하시길 추천드립니다.
+
+## 6-5. 현재의 문제?
+
+테스트, 빌드, 배포까지 전부 자동화 되었습니다!  
+이젠 작업이 끝난 내용을 Master 브랜치에 Push만 하면 자동으로 모든 과정이 진행되어 EC2에 배포가 됩니다.  
+  
+배포하는 동안 스프링부트 프로젝트는 종료상태가 되어 서비스를 이용할수 없다는 것입니다.  
+어떻게 하면 배포하는 동안에도 서비스는 계속 유지될 수 있을까요?  
+다음 시간에는 이 문제를 해결하기 위해 **무중단 배포** 방법을 소개드리겠습니다.
 
 ## 참고
 

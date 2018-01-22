@@ -26,6 +26,19 @@ deploy:
     on:
       repo: jojoldu/springboot-webservice
       branch: master
+  - provider: codedeploy
+    access_key_id: $AWS_ACCESS_KEY # Travis repo settings에 설정된 값
+    secret_access_key: $AWS_SECRET_KEY # Travis repo settings에 설정된 값
+    bucket: springboot-webservice-deploy # S3 버킷
+    key: springboot-webservice.zip # 빌드 파일을 압축해서 전달
+    bundle_type: zip
+    application: springboot-webservice # 웹 콘솔에서 등록한 CodeDeploy 어플리케이션
+    deployment_group: springboot-webservice-group # 웹 콘솔에서 등록한 CodeDeploy 배포 그룹
+    region: ap-northeast-2
+    wait-until-deployed: true
+    on:
+      repo: jojoldu/springboot-webservice
+      branch: master
 
 notifications:
   email:
