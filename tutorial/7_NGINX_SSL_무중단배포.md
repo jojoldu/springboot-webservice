@@ -167,6 +167,13 @@ proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
 proxy_set_header Host $http_host;
 ```
 
+* proxy_pass : 요청이 오면 ```http://localhost:8080```로 전달
+* proxy_set_header XXX : 실제 요청 데이터를 header의 각 항목에 할당
+  * ex) ```proxy_set_header X-Real-IP $remote_addr```: Request Header의 X-Real-IP에 요청자의 IP를 저장 
+
+> Tip)  
+Nginx에 대해 좀 더 자세히 알고 싶으신 분들은 [꿀벌개발일지-Nginx HTTP Server](http://ohgyun.com/477) 혹은 [엔진엑스로 운용하는 효율적인 웹사이트 ](http://www.acornpub.co.kr/book/nginx1)를 추천드립니다.
+
 수정이 끝나셨으면 ```:wq```로 저장 & 종료 하시고, Nginx를 재시작하겠습니다.
 
 ```bash
@@ -177,14 +184,98 @@ sudo service nginx restart
 
 ![nginx5](./images/7/nginx5.png)
 
-Nginx가 스프링부트 프로젝트를 프록시 하는것이 확인됩니다!
+Nginx가 스프링부트 프로젝트를 프록시 하는것이 확인됩니다!  
+  
+본격적으로 무중단 배포 작업을 진행해보겠습니다.
 
+### 7-3-2. set1, set2 Profile 설정
 
-### 7-3-2. 
+자 여기서 질문하나 드리겠습니다.  
+실제 서비스에선 로컬, 개발서버, 운영서버 등으로 환경이 분리되어 접속하는 DB 값, 외부 API 주소등이 서로 다릅니다.  
+하지만 **프로젝트의 코드는 하나인데, 어떻게 로컬, 개발, 운영 환경을 구분해서 필요한 값들을 사용할까요**?  
+아주 오래전에는 이를 필요한 부분에서 전부 ```if ~ else```로 구분해서 사용했습니다.  
+하지만 최근에는 이를 개선해서 **외부의 설정 파일을 통해 사용**하도록 하였습니다.  
+스프링부트는 ```.properties```, ```.yml``` 파일을 통해 여러 설정값을 관리합니다.  
+  
+예를 들어 현재 프로젝트처럼 ```.yml```로 관리한다면 다음과 같이 될수 있습니다.
 
+![profile3](./images/7/profile3.png)
+
+(따라 치진 마세요. 이렇게 하지 않을거에요!)  
+  
+이렇게 하면 ```---```를 기준으로 값들이 구분됩니다.  
+그리고 ```spring.profiles: local, dev, real```등이 ```---```가 활성화되는 파라미터가 됩니다.  
+즉, 스프링부트 프로젝트를 실행시킬때 ```nohup java -jar -Dspring.profiles.active=real```와 같이 사용하면 ```real```에 있는 값들이 프로젝트에 할당됩니다.  
+설명만 하니 잘 이해가 안되시죠?  
+하나씩 차근차근 진행하겠습니다.  
+  
+먼저 실행중인 프로젝트의 Profile이 뭔지 확인할 수 있는 API를 만들겠습니다.  
+WebRestController.java에 아래와 같이 API 메소드를 하나 추가합니다.
+
+```java
+@RestController
+@AllArgsConstructor
+public class WebRestController {
+
+    private PostsService postsService;
+    private Environment env;
+
+    ... 
+
+    @GetMapping("/profile")
+    public String getProfile () {
+        return Arrays.stream(env.getActiveProfiles())
+                .findFirst()
+                .orElse("");
+    }
+}
+```
+
+프로젝트의 환경설정 값을 다루는 ```Environment``` Bean을 DI받아 현재 활성화된 Profile을 반환하는 코드입니다.  
+잘 수행되는지 테스트 코드를 생성해보겠습니다.  
+src/**test**/java/com/jojoldu/webservice/web에 WebRestControllerTest를 생성해서 테스트 코드를 추가합니다.
+
+```java
+@RunWith(SpringRunner.class)
+@SpringBootTest(webEnvironment = RANDOM_PORT)
+public class WebRestControllerTest {
+
+    @Autowired
+    private TestRestTemplate restTemplate;
+
+    @Test
+    public void Profile확인 () {
+        //when
+        String profile = this.restTemplate.getForObject("/profile", String.class);
+
+        //then
+        assertThat(profile).isEqualTo("local");
+    }
+}
+```
+
+테스트 내용은 ```/profile```로 요청하면 현재 활성화된 Profile값 (local이) 반환되는지 비교하는 것입니다.  
+근데 왜 테스트 코드에서 local일까요?  
+이는 src/**test**/resources/application.yml 때문입니다.
+테스트의 환경은 src/**test**/resources/application.yml에 의존하는데 이 yml에 ```spring.profile.active```가 local로 되있기 때문입니다.
+
+![profile4](./images/7/profile4.png)
+
+테스트를 수행해보시면!
+
+![profile5](./images/7/profile5.png)
+
+테스트가 잘 통과 되었습니다!  
+profile값을 반환하는 API가 완성되었으니 운영 환경의 yml파일을 추가해보겠습니다.  
+운영 환경의 yml은 프로젝트 내부가 아닌 **외부에 생성**하겠습니다.  
+본인이 원하는 디렉토리에 ```real-application.yml```을 생성합니다.  
+저는 ```/app/config/springboot-webservice/real-application.yml```위치에 생성했습니다.
+
+![profile6](./images/7/profile6.png)
+
+그리고 ```real-application.yml```에는 아래 코드를 등록합니다.
 
 ```yaml
-
 ---
 spring:
   profiles: set1
@@ -198,3 +289,70 @@ spring:
 server:
   port: 8082
 ```
+
+즉, **set1/set2 profile을 8081, 8082 포트**를 갖도록 설정한 것입니다.  
+
+> Tip)  
+절대 **프로젝트 내부에 운영환경의 yml을 포함시키지 않습니다**.  
+Git Push를 혹시나 한번이라도 하셨다면 프로젝트를 삭제하시는걸 추천드립니다.  
+Git은 한번이라도 커밋 되면 이력이 남기 때문에 단순히 파일 삭제만 한다고 내용이 사라지지 않습니다.  
+Github 같이 오픈된 공간에 운영환경의 설정 (Database 접속정보, 세션저장소 접속정보, 암호화 키 등등)
+현재는 크리티컬한 정보를 다루지 않기 때문에 괜찮지만, 절대 주의해야합니다.
+
+외부에 있는 이 파일을 프로젝트가 호출할 수 있도록 Application.java 코드를 아래와 같이 변경합니다.
+
+```java
+
+@EnableJpaAuditing // JPA Auditing 활성화
+@SpringBootApplication
+public class Application {
+
+	public static final String APPLICATION_LOCATIONS = "spring.config.location="
+			+ "classpath:application.yml,"
+			+ "/app/config/springboot-webservice/real-application.yml";
+
+	public static void main(String[] args) {
+		new SpringApplicationBuilder(Application.class)
+				.properties(APPLICATION_LOCATIONS)
+				.run(args);
+	}
+}
+
+```
+
+스프링부트 프로젝트가 실행될때, 프로젝트 내부에 있는 ```application.yml```과 외부에 위치한 ```/app/config/springboot-webservice/real-application.yml```를 모두 불러오도록 하였습니다.  
+자 그럼 한번 잘 불러오는지 확인해보겠습니다.  
+IntelliJ에서 ```command+shift+a```를 사용해 ```Edit Configuration```을 검색합니다.
+
+![profile7](./images/7/profile7.png)
+
+Application을 선택후 좌측 상단의 Copy 버튼을 클릭해서 설정 내용을 복사합니다.
+
+![profile8](./images/7/profile8.png)
+
+복사된 설정 내용을 아래와 같이 ```set1```을 Profile로 지정한 실행환경으로 수정합니다.
+
+![profile9](./images/7/profile9.png)
+
+새로 생성된 실행환경을 선택하고 실행해보시면!
+
+![profile10](./images/7/profile10.png)
+
+브라우저에서 localhost:8081/profile 로 접속해보시면!
+
+![profile11](./images/7/profile11.png)
+
+set1이 반환되는것이 확인 됩니다!  
+set1, set2가 정상적으로 적용되는게 확인 되었으니 EC2 인스턴스에도 똑같이 설정파일을 추가하겠습니다.  
+EC2에 접속하셔서 로컬에서 했던것과 마찬가지로 ```/app/config/springboot-webservice/real-application.yml```를 생성해 설정값을 등록합니다.
+
+![profile12](./images/7/profile12.png)
+
+여기까지 하셨으면 모든 내용을 Git Commit & Push 하고 EC2에서도 profile이 잘되는지 확인합니다.
+
+
+
+
+
+
+
