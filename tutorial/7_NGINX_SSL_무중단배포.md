@@ -350,9 +350,9 @@ EC2에 접속하셔서 로컬에서 했던것과 마찬가지로 ```/app/config/
 
 여기까지 하셨으면 모든 내용을 Git Commit & Push 하고 EC2에서도 profile이 잘되는지 확인합니다.
 
+![profile13](./images/7/profile13.png)
 
-
-
+### 7-3-3. deploy 스크립트 생성
 
 
 
