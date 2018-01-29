@@ -72,3 +72,6 @@ chmod a+x certbot-auto
 sudo ./certbot-auto --nginx
 ```
 
+## 참고
+
+* [Amazon Linux에서 Certbot의 Let's Encrypt](https://docs.aws.amazon.com/ko_kr/AWSEC2/latest/UserGuide/SSL-on-an-instance.html#letsencrypt)

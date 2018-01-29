@@ -148,5 +148,53 @@ AWS에서 EC2 Public DNS를 복사합니다.
 
 ![nginx3](./images/7/nginx3.png)
 
-Nginx가 잘 설치된것을 확인할 수 있습니다.
+Nginx가 잘 설치된것을 확인할 수 있습니다.  
+이 Nginx가 현재 실행중인 스프링부트 프로젝트를 바라볼수 있도록 (리버스 프록시) 설정하겠습니다.  
+nginx 설정 파일을 열어서
 
+```bash
+sudo vi /etc/nginx/nginx.conf
+```
+
+설정 내용 중 server 아래의 ```location /``` 부분을 찾아서 아래와 같이 추가합니다.
+
+![nginx4](./images/7/nginx4.png)
+
+```bash
+proxy_pass http://localhost:8080;
+proxy_set_header X-Real-IP $remote_addr;
+proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+proxy_set_header Host $http_host;
+```
+
+수정이 끝나셨으면 ```:wq```로 저장 & 종료 하시고, Nginx를 재시작하겠습니다.
+
+```bash
+sudo service nginx restart
+```
+
+다시 브라우저로 접속해서 Nginx 시작페이지가 보이던 화면을 새로고침해보시면!
+
+![nginx5](./images/7/nginx5.png)
+
+Nginx가 스프링부트 프로젝트를 프록시 하는것이 확인됩니다!
+
+
+### 7-3-2. 
+
+
+```yaml
+
+---
+spring:
+  profiles: set1
+server:
+  port: 8081
+
+---
+spring:
+  profiles: set2
+
+server:
+  port: 8082
+```
