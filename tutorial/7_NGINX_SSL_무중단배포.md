@@ -352,7 +352,144 @@ EC2에 접속하셔서 로컬에서 했던것과 마찬가지로 ```/app/config/
 
 ![profile13](./images/7/profile13.png)
 
-### 7-3-3. deploy 스크립트 생성
+(EC2는 현재 profile 옵션을 주지 않고 실행했기 때문에 기본값인 local이 적용됩니다.)  
+  
+자 그럼! 이제 본격적인 배포 스크립트를 한번 생성해보겠습니다.
+
+### 7-3-3. 배포스크립트 작성
+
+먼저 무중단 배포와 관련된 파일을 관리할 디렉토리와 스크립트 파일을 생성하겠습니다.  
+EC2에 접속하셔서 아래 명령어를 실행합니다.
+
+```bash
+mkdir ~/app/nonstop
+```
+
+자 그리고 배포 스크립트가 정상적으로 되는지 테스트 해보기 위해 기존에 받아둔 스프링 프로젝트.jar를 복사하겠습니다.
+
+```bash
+mkdir ~/app/nonstop/springboot-webservice
+mkdir ~/app/nonstop/springboot-webservice/build
+mkdir ~/app/nonstop/springboot-webservice/build/libs
+cp ~/app/travis/build/build/libs/*.jar ~/app/nonstop/springboot-webservice/build/libs/
+```
+
+![deploy1](./images/7/deploy1.png)
+
+테스트할 jar가 있으니, 이제 배포 스크립트를 작성하겠습니다.  
+  
+jar파일을 모아둘 디렉토리를 생성하시고,
+
+```bash
+mkdir ~/app/nonstop/jar
+```
+
+스크립트 파일을 생성합니다.
+
+```bash
+vim ~/app/nonstop/deploy.sh
+```
+
+스크립트 내용은 아래와 같습니다.
+
+```bash
+#!/bin/bash
+BASE_PATH=/home/ec2-user/app/nonstop
+BUILD_PATH=$(ls $BASE_PATH/springboot-webservice/build/libs/*.jar)
+JAR_NAME=$(basename $BUILD_PATH)
+echo "> build 파일명: $JAR_NAME"
+
+echo "> build 파일 복사"
+DEPLOY_PATH=$BASE_PATH/jar/
+cp $BUILD_PATH $DEPLOY_PATH
+
+echo "> 현재 구동중인 Set 확인"
+CURRENT_PROFILE=$(curl http://localhost/profile)
+echo "> $CURRENT_PROFILE"
+
+# 쉬고 있는 set 찾기: set1이 사용중이면 set2가 쉬고 있고, 반대면 set1이 쉬고 있음
+if [ $CURRENT_PROFILE == set1 ]
+then
+  CURRENT_PORT=8081
+  IDLE_PROFILE=set2
+  IDLE_PORT=8082
+elif [ $CURRENT_PROFILE == set2 ]
+then
+  CURRENT_PORT=8082
+  IDLE_PROFILE=set1
+  IDLE_PORT=8081
+else
+  echo "> 일치하는 Profile이 없습니다. Profile: $CURRENT_PROFILE"
+  CURRENT_PORT=8081
+  IDLE_PROFILE=set2
+  IDLE_PORT=8082
+fi
+
+echo "> application.jar 교체"
+IDLE_APPLICATION=$IDLE_PROFILE-springboot-webservice.jar
+IDLE_APPLICATION_PATH=$DEPLOY_PATH$IDLE_APPLICATION
+
+ln -Tfs $DEPLOY_PATH$BUILD_FILE_NAME $IDLE_APPLICATION_PATH
+
+echo "> $IDLE_PROFILE 에서 구동중인 애플리케이션 pid 확인"
+CURRENT_PID=$(pgrep -f $IDLE_APPLICATION)
+
+if [ -z $CURRENT_PID ]; then
+  echo "> 현재 구동중인 애플리케이션이 없으므로 종료하지 않습니다."
+else
+  echo "> kill -15 $CURRENT_PID"
+  kill -15 $CURRENT_PID
+  sleep 5
+fi
+
+echo "> $IDLE_PROFILE 배포"
+nohup java -jar -Dspring.profiles.active=$IDLE_PROFILE $IDLE_APPLICATION &
+
+echo "> $IDLE_PROFILE 10초 후 Health check 시작"
+echo "> curl --silent http://localhost:$CURRENT_PORT/health "
+sleep 10
+
+retry_count=0
+while [ $retry_count -lt 10 ]; do
+    response=$(curl --silent http://localhost:$CURRENT_PORT/health)
+
+    if [ -n "$response" ]; then # $response is not null
+        up_count=$(echo $response | grep 'UP' | wc -l)
+
+        if [ $up_count -ge 1 ]; then # $up_count >= 1
+            echo "> Health check 성공"
+            break
+        else
+            echo "> Health check결과 응답을 알 수 없거나 혹은 status가 UP이 아닙니다."
+            echo "> 받은 응답: ${response}"
+            exit 1
+        fi
+    fi
+
+    # retry_count수 증가
+    let retry_count++
+
+    if [ $retry_count -eq 20 ]; then
+        >&2 echo "> Health check 실패. Nginx에서 활성화 하지 않고 배포를 종료합니다."
+        exit 1
+    fi
+
+    echo "> Health check 연결 실패. 재시도..."
+
+    sleep 10
+done
+```
+
+
+* ```1>&2 echo "> Health check 실패. "```
+  * ```>``` redirect standard output (implicit 1>)
+  * ```&``` what comes next is a file descriptor, not a file (only for right hand side of >)
+  * ```2``` stderr file descriptor number
+
+> Tip)  
+좀 더 자세한 Bash의 표준입출력/표준에러 등을 알고싶으신 분들은 [KLDP Wiki](https://wiki.kldp.org/HOWTO/html/Bash-Prog-Intro-HOWTO/x55.html)를 참고하세요!
+ 
+
 
 
 
