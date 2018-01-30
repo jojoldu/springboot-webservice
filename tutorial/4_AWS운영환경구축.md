@@ -369,7 +369,7 @@ show variables like 'c%';
 ![rds23](./images/4/rds23.png)
 
 위 사진을 보시면 아직 database 관련 설정에선 utf8이 적용 안된것을 알수 있습니다.  
-이 부분은 파라미터 그룹으로 해결이 안되고, 직접 설정값을 적용해야만 합니다. (참고: [링크](![rds22](./images/4/rds22.png)))  
+이 부분은 파라미터 그룹으로 해결이 안되고, 직접 설정값을 적용해야만 합니다. (참고: [링크](http://tiveloper.tistory.com/entry/Amazon-RDS-MariaDB-UTF8-%EB%B3%80%EA%B2%BD))  
   
 그래서 직접 명령어를 실행시킵니다.
 
