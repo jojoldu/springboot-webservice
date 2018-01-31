@@ -359,6 +359,11 @@ EC2에 접속하셔서 로컬에서 했던것과 마찬가지로 ```/app/config/
 ### 7-3-3. 배포 스크립트 작성
 
 먼저 무중단 배포와 관련된 파일을 관리할 디렉토리와 스크립트 파일을 생성하겠습니다.  
+1번째 배포 디렉토리로 ```git```  
+2번째 배포 디렉토리로 ```travis```  
+를 생성했습니다.  
+3번째는 ```nonstop```으로 하겠습니다.  
+  
 EC2에 접속하셔서 아래 명령어를 실행합니다.
 
 ```bash
@@ -487,7 +492,7 @@ done
   * ```curl```에서 ```-s``` 은 silent란 뜻으로 **상태진행바를 노출시키지 않는 옵션**입니다.
   * 만약 이 옵션을 주지 않은채 사용하시면 아래와 같은 화면이 ```curl``` 실행시 노출됩니다.
 
-![deploy5](./images/7/deploy5.png)
+![deploy4](./images/7/deploy4.png)
 
 (예시)
 
@@ -512,13 +517,126 @@ done
 
 결과를 보시면!!
 
-![deploy10](./images/7/deploy10.png)
+![deploy5](./images/7/deploy5.png)
 
-짠! 성공적으로 set1을 profile을 가진 스프링부트 프로젝트가 실행되었습니다!
+짠! 성공적으로 set1을 profile을 가진 스프링부트 프로젝트가 실행되었습니다!  
+하지만 여기서 끝이 아니겠죠?  
+**Nginx가 set1과 set2를 번갈아가면서 바라볼 수 있는(프록시)** 환경이 필요합니다!
 
+### 7-3-4. Nginx 동적 프록시 설정
 
-### 7-3-4. Nginx 스위치 스크립트 작성
+배포가 완료되면 어플리케이션 실행 된후, **Nginx가 기존에 바라보던 Profile의 반대편을 바라보도록 변경**하는 과정이 필요합니다.  
+먼저 Nginx의 설정쪽으로 한번 가볼까요?  
 
+```bash
+cd /etc/nginx
+ll
+```
 
+![deploy6](./images/7/deploy6.png)
+
+여기가 Nginx의 설정에 관련된 모든 정보가 담겨 있는 디렉토리입니다.  
+Nginx 설정을 변경하고 싶으실때는 여기로 와서 수정하시면 됩니다.  
+먼저 Nginx가 **동적으로 Proxy Pass를 변경**할수 있도록 설정을 수정하겠습니다.  
+  
+
+```bash
+sudo vim /etc/nginx/nginx.conf
+```
+
+그리고 ```location /``` 부분을 찾아 아래와 같이 변경합니다.
+
+```bash
+
+          include /etc/nginx/conf.d/service-url.inc;
+ 
+          location / {
+                  proxy_pass $service_url;
+
+```
+
+![deploy7](./images/7/deploy7.png)
+
+이 코드가 하는 일은 다음과 같습니다
+
+* ```include /etc/nginx/conf.d/service-url.inc;```
+  * service-url.inc 파일을 include 시킵니다.
+  * Java로 치면 import 패키지와 같다고 보시면 됩니다.
+  * 이렇게 할 경우 nginx.conf에서 **service-url.inc에 있는 변수들을 그대로 사용**할 수 있습니다.
+* ```proxy_pass $service_url;```
+  * service-url.inc에 있는 ```service_url``` 변수를 호출합니다.
+
+자 그럼 service-url.inc 파일을 생성해보겠습니다.
+
+```bash
+sudo vim /etc/nginx/conf.d/service-url.inc
+```
+
+그리고 아래 코드를 입력합니다.
+
+```bash
+set $service_url http://127.0.0.1:8081;
+```
+
+저장하셨으면 변경 내용 반영을 위해 nginx reload를 실행합니다.
+
+```bash
+sudo service nginx reload
+```
+
+테스트를 위해 ```curl```을 수행해보면!
+
+```bash
+curl -s localhost/profile
+```
+
+![deploy8](./images/7/deploy8.png)
+
+Nginx로 요청을 하면 set1로 Proxy가 가는것이 확인 됩니다!
+
+### 7-3-5. Nginx 스크립트 작성
+
+이제는 이렇게 동적 프록시 환경이 구축된 Nginx을 **배포 시점에 바라보는 Profile을 자동으로 변경**하도록 스위치 스크립트를 생성하겠습니다.
+
+```bash
+vim ~/app/nonstop/switch.sh
+```
+
+스크립트 내용은 아래와 같습니다.
+
+```bash
+#!/bin/bash
+echo "> 현재 구동중인 Port 확인"
+CURRENT_PROFILE=$(curl -s http://localhost/profile)
+
+# 쉬고 있는 set 찾기: set1이 사용중이면 set2가 쉬고 있고, 반대면 set1이 쉬고 있음
+if [ $CURRENT_PROFILE == set1 ]
+then
+  IDLE_PORT=8082
+elif [ $CURRENT_PROFILE == set2 ]
+then
+  IDLE_PORT=8081
+else
+  echo "> 일치하는 Profile이 없습니다. Profile: $CURRENT_PROFILE"
+  echo "> 8081을 할당합니다."
+  IDLE_PORT=8081
+fi
+
+echo "> 전환할 Port: $IDLE_PORT"
+echo "> Port 전환"
+echo "set \$service_url http://127.0.0.1:${IDLE_PORT};" |sudo tee /etc/nginx/conf.d/service-url.inc
+
+PROXY_PORT=$(curl -s http://localhost/profile)
+echo "> Nginx Current Proxy Port: $PROXY_PORT"
+
+echo "> Nginx Reload"
+sudo service nginx reload
+```
+
+저장하신뒤 ```switch.sh```에 실행권한을 줍니다.
+
+```bash
+chmod +x ~/app/nonstop/switch.sh
+```
 
 
