@@ -356,7 +356,7 @@ EC2에 접속하셔서 로컬에서 했던것과 마찬가지로 ```/app/config/
   
 자 그럼! 이제 본격적인 배포 스크립트를 한번 생성해보겠습니다.
 
-### 7-3-3. 배포스크립트 작성
+### 7-3-3. 배포 스크립트 작성
 
 먼저 무중단 배포와 관련된 파일을 관리할 디렉토리와 스크립트 파일을 생성하겠습니다.  
 EC2에 접속하셔서 아래 명령어를 실행합니다.
@@ -404,91 +404,120 @@ DEPLOY_PATH=$BASE_PATH/jar/
 cp $BUILD_PATH $DEPLOY_PATH
 
 echo "> 현재 구동중인 Set 확인"
-CURRENT_PROFILE=$(curl http://localhost/profile)
+CURRENT_PROFILE=$(curl -s http://localhost/profile)
 echo "> $CURRENT_PROFILE"
 
 # 쉬고 있는 set 찾기: set1이 사용중이면 set2가 쉬고 있고, 반대면 set1이 쉬고 있음
 if [ $CURRENT_PROFILE == set1 ]
 then
-  CURRENT_PORT=8081
   IDLE_PROFILE=set2
   IDLE_PORT=8082
 elif [ $CURRENT_PROFILE == set2 ]
 then
-  CURRENT_PORT=8082
   IDLE_PROFILE=set1
   IDLE_PORT=8081
 else
   echo "> 일치하는 Profile이 없습니다. Profile: $CURRENT_PROFILE"
-  CURRENT_PORT=8081
-  IDLE_PROFILE=set2
-  IDLE_PORT=8082
+  echo "> set1을 할당합니다. IDLE_PROFILE: set1"
+  IDLE_PROFILE=set1
+  IDLE_PORT=8081
 fi
 
 echo "> application.jar 교체"
 IDLE_APPLICATION=$IDLE_PROFILE-springboot-webservice.jar
 IDLE_APPLICATION_PATH=$DEPLOY_PATH$IDLE_APPLICATION
 
-ln -Tfs $DEPLOY_PATH$BUILD_FILE_NAME $IDLE_APPLICATION_PATH
+ln -Tfs $DEPLOY_PATH$JAR_NAME $IDLE_APPLICATION_PATH
 
 echo "> $IDLE_PROFILE 에서 구동중인 애플리케이션 pid 확인"
-CURRENT_PID=$(pgrep -f $IDLE_APPLICATION)
+IDLE_PID=$(pgrep -f $IDLE_APPLICATION)
 
-if [ -z $CURRENT_PID ]; then
+if [ -z $IDLE_PID ]
+then
   echo "> 현재 구동중인 애플리케이션이 없으므로 종료하지 않습니다."
 else
-  echo "> kill -15 $CURRENT_PID"
-  kill -15 $CURRENT_PID
+  echo "> kill -15 $IDLE_PID"
+  kill -15 $IDLE_PID
   sleep 5
 fi
 
 echo "> $IDLE_PROFILE 배포"
-nohup java -jar -Dspring.profiles.active=$IDLE_PROFILE $IDLE_APPLICATION &
+nohup java -jar -Dspring.profiles.active=$IDLE_PROFILE $IDLE_APPLICATION_PATH &
 
 echo "> $IDLE_PROFILE 10초 후 Health check 시작"
-echo "> curl --silent http://localhost:$CURRENT_PORT/health "
+echo "> curl -s http://localhost:$IDLE_PORT/health "
 sleep 10
 
-retry_count=0
-while [ $retry_count -lt 10 ]; do
-    response=$(curl --silent http://localhost:$CURRENT_PORT/health)
+for retry_count in {1..10}
+do
+  response=$(curl -s http://localhost:$IDLE_PORT/health)
+  up_count=$(echo $response | grep 'UP' | wc -l)
 
-    if [ -n "$response" ]; then # $response is not null
-        up_count=$(echo $response | grep 'UP' | wc -l)
+  if [ $up_count -ge 1 ]
+  then # $up_count >= 1 ("UP" 문자열이 있는지 검증)
+      echo "> Health check 성공"
+      break
+  else
+      echo "> Health check의 응답을 알 수 없거나 혹은 status가 UP이 아닙니다."
+      echo "> Health check: ${response}"
+  fi
 
-        if [ $up_count -ge 1 ]; then # $up_count >= 1
-            echo "> Health check 성공"
-            break
-        else
-            echo "> Health check결과 응답을 알 수 없거나 혹은 status가 UP이 아닙니다."
-            echo "> 받은 응답: ${response}"
-            exit 1
-        fi
-    fi
+  if [ $retry_count -eq 10 ]
+  then
+    echo "> Health check 실패. "
+    echo "> Nginx에 연결하지 않고 배포를 종료합니다."
+    exit 1
+  fi
 
-    # retry_count수 증가
-    let retry_count++
-
-    if [ $retry_count -eq 20 ]; then
-        >&2 echo "> Health check 실패. Nginx에서 활성화 하지 않고 배포를 종료합니다."
-        exit 1
-    fi
-
-    echo "> Health check 연결 실패. 재시도..."
-
-    sleep 10
+  echo "> Health check 연결 실패. 재시도..."
+  sleep 10
 done
 ```
 
+갑자기 쉘 스크립트 내용이 많아졌습니다!  
+그래도 차근차근 한줄씩 설명을 읽어보시면서 따라오시면 됩니다.
 
-* ```1>&2 echo "> Health check 실패. "```
-  * ```>``` redirect standard output (implicit 1>)
-  * ```&``` what comes next is a file descriptor, not a file (only for right hand side of >)
-  * ```2``` stderr file descriptor number
+![deploy2](./images/7/deploy2.png)
 
-> Tip)  
-좀 더 자세한 Bash의 표준입출력/표준에러 등을 알고싶으신 분들은 [KLDP Wiki](https://wiki.kldp.org/HOWTO/html/Bash-Prog-Intro-HOWTO/x55.html)를 참고하세요!
- 
+![deploy3](./images/7/deploy3.png)
+
+
+* (3) ```CURRENT_PROFILE=$(curl -s http://localhost/profile)```
+  * 현재 Profile을 ```curl```을 통해 확인합니다.
+  * ```curl```에서 ```-s``` 은 silent란 뜻으로 **상태진행바를 노출시키지 않는 옵션**입니다.
+  * 만약 이 옵션을 주지 않은채 사용하시면 아래와 같은 화면이 ```curl``` 실행시 노출됩니다.
+
+![deploy5](./images/7/deploy5.png)
+
+(예시)
+
+* (8) ```response=$(curl -s http://localhost:$IDLE_PORT/health)```
+  * ```/health```의 결과는 ```{"status":"UP"}```와 같이 나옵니다.
+  * 이는 저희가 처음에 추가한 ```org.springframework.boot:spring-boot-starter-actuator``` 의존성 덕분입니다.
+  * **스프링부트 프로젝트의 여러 상태를 확인**해줄 수 있는 의존성입니다. 
+  * 좀더 자세한 내용은 이전에 작성한 [포스팅](http://jojoldu.tistory.com/43)을 한번 참고하시면 좋을것 같습니다.  
+* (8) ```up_count=$(echo $response | grep 'UP' | wc -l)```
+  * response 결과에 "UP"이 있는지 확인합니다.
+  * ```echo $response | grep 'UP'```을 하면 **UP가 포함된 문자열을 필터링**해줍니다.
+  * ```| wc -l```로 **필터링된 문자열의 갯수**가 몇개인지 확인합니다.
+  * 즉, UP가 있다면 1개 이상이겠죠?
+
+스크립트가 다 작성되셨으면 저장(```:wq```)합니다.  
+자 그럼 실제로 이 스크립트를 한번 실행해볼까요?  
+아래 명령어로 스크립트를 실행합니다.
+
+```bash
+~/app/nonstop/deploy.sh
+```
+
+결과를 보시면!!
+
+![deploy10](./images/7/deploy10.png)
+
+짠! 성공적으로 set1을 profile을 가진 스프링부트 프로젝트가 실행되었습니다!
+
+
+### 7-3-4. Nginx 스위치 스크립트 작성
 
 
 
