@@ -695,5 +695,20 @@ sleep 10
 
 ![deploy11](./images/7/deploy11.png)
 
+모든 스크립트 작업이 완료되었습니다!
+이제 전체 배포 과정에 적용해서 테스트해보겠습니다!
 
+## 7-4. 실제 배포에 적용
+
+프로젝트 폴더의 ```execute-deploy.sh```에서 ```travis```를 ```nonstop```으로 변경합니다.
+
+![deploy12](./images/7/deploy12.png)
+
+변경 사항을 좀 더 잘 확인하기 위해 ```build.gradle```과 ```main.hbs```를 아래와 같이 변경합니다.
+
+![deploy13](./images/7/deploy13.png)
+
+(좌측이 ```build.gradle```, 우측이 ```main.hbs```입니다.)  
+  
+자! 모두다 수정하셨으면 git commit & push를 실행합니다.
 
