@@ -700,9 +700,14 @@ sleep 10
 
 ## 7-4. 실제 배포에 적용
 
+먼저 기존에 ```/travis```로 되어있는 배포 설정들을 변경합니다.  
 프로젝트 폴더의 ```execute-deploy.sh```에서 ```travis```를 ```nonstop```으로 변경합니다.
 
 ![deploy12](./images/7/deploy12.png)
+
+그리고 프로젝트 폴더의 ```appspec.yml```도 아래와 같이 ```/nonstop/springboot-webservice/```로 변경합니다.
+
+![deploy14](./images/7/deploy14.png)
 
 변경 사항을 좀 더 잘 확인하기 위해 ```build.gradle```과 ```main.hbs```를 아래와 같이 변경합니다.
 
