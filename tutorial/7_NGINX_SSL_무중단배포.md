@@ -578,10 +578,10 @@ sudo vim /etc/nginx/conf.d/service-url.inc
 set $service_url http://127.0.0.1:8081;
 ```
 
-저장하셨으면 변경 내용 반영을 위해 nginx reload를 실행합니다.
+저장하셨으면 변경 내용 반영을 위해 nginx restart를 실행합니다.
 
 ```bash
-sudo service nginx reload
+sudo service nginx restart
 ```
 
 테스트를 위해 ```curl```을 수행해보면!
@@ -633,10 +633,67 @@ echo "> Nginx Reload"
 sudo service nginx reload
 ```
 
+대부분의 스크립트는 ```deploy.sh```와 비슷해서 눈에 익으실텐데요.  
+몇가지만 처음 보실것 같습니다.
+
+* ```echo "set \$service_url http://127.0.0.1:${IDLE_PORT};" |sudo tee /etc/nginx/conf.d/service-url.inc```
+  * ```set \$service_url http://127.0.0.1:${IDLE_PORT};```라는 문자열을 ```tee```명령어를 통해 출력과 ```/etc/nginx/conf.d/service-url.inc```에 쓰기를 함께 합니다.
+  * 좀 더 자세한 설명은 [제타위키](https://zetawiki.com/wiki/%EB%A6%AC%EB%88%85%EC%8A%A4_tee,_%ED%99%94%EB%A9%B4%EA%B3%BC_%ED%8C%8C%EC%9D%BC%EC%97%90_%EB%8F%99%EC%8B%9C_%EC%B6%9C%EB%A0%A5%ED%95%98%EA%B8%B0)를 참고하세요! 
+
+* ```sudo service nginx reload```
+  * Nginx는 restart와 reload가 있습니다.
+  * reload는 설정만 재적용하기 때문에 바로 적용됩니다. 
+  * restart는 **Nginx 데몬 자체를 재실행**합니다.
+
 저장하신뒤 ```switch.sh```에 실행권한을 줍니다.
 
 ```bash
 chmod +x ~/app/nonstop/switch.sh
 ```
+
+자 그럼 한번 스위치 스크립트를 실행해볼까요?  
+먼저 현재는 set1만 실행된 상태인데 set2도 실행시키겠습니다.
+
+```bash
+~/app/nonstop/deploy.sh
+```
+
+![deploy9](./images/7/deploy9.png)
+
+set1과 set2가 둘다 올라간 상태이고, 현재 Nginx는 set1을 보고 있습니다.  
+이제 ```switch.sh```를 실행해보겠습니다.  
+다운타임 없이 바로 전환되는지 확인하기 위해서 브라우저에서 바로 실시간으로 확인해보겠습니다.
+
+```bash
+~/app/nonstop/switch.sh
+```
+
+![switch](./images/7/switch.gif)
+
+ ```switch.sh```도 기능이 정상적으로 작동되는게 확인됩니다!  
+자 이제 그럼 ```deploy.sh```와 ```switch.sh```를 합쳐 ```deploy.sh```가 실행되면 다음으로 switch.sh가 자동으로 실행되도록 변경하겠습니다.
+
+```bash
+vim ~/app/nonstop/deploy.sh
+```
+
+스크립트 가장 하단에 다음의 코드를 추가합니다.
+
+```bash
+echo "> 스위칭"
+sleep 10
+~/app/nonstop/switch.sh
+```
+
+![deploy10](./images/7/deploy10.png)
+
+그럼 이제 ```deploy.sh```를 실행시키면 ```switch.sh```도 실행되는지 확인해보겠습니다.
+
+```bash
+~/app/nonstop/deploy.sh
+```
+
+![deploy11](./images/7/deploy11.png)
+
 
 
