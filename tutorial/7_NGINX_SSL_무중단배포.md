@@ -700,7 +700,14 @@ sleep 10
 
 ## 7-4. 실제 배포에 적용
 
-먼저 기존에 ```/travis```로 되어있는 배포 설정들을 변경합니다.  
+먼저 기존에 배포된 jar를 삭제합니다.  
+(0.0.3 버전의 빌드파일을 제거합니다.)  
+
+```bash
+rm ~/app/nonstop/springboot-webservice/build/libs/*.jar
+```
+
+기존에 ```/travis```로 되어있는 배포 설정들을 변경합니다.  
 프로젝트 폴더의 ```execute-deploy.sh```에서 ```travis```를 ```nonstop```으로 변경합니다.
 
 ![deploy12](./images/7/deploy12.png)
