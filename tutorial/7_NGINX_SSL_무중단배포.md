@@ -708,9 +708,16 @@ rm ~/app/nonstop/springboot-webservice/build/libs/*.jar
 ```
 
 기존에 ```/travis```로 되어있는 배포 설정들을 변경합니다.  
-프로젝트 폴더의 ```execute-deploy.sh```에서 ```travis```를 ```nonstop```으로 변경합니다.
+프로젝트 폴더의 ```execute-deploy.sh``` 코드를 아래와 같이 변경합니다.
 
-![deploy12](./images/7/deploy12.png)
+```bash
+#!/bin/bash
+rm -rf /home/ec2-user/app/nonstop/springboot-webservice/*
+/home/ec2-user/app/nonstop/deploy.sh > /dev/null 2> /dev/null < /dev/null &
+```
+
+* 기존에 배포된 ```springboot-webservice```를 삭제하고
+* ```travis```로 잡혀있던 deplosy.sh 디렉토리를 nonstop으로 변경합니다.
 
 그리고 프로젝트 폴더의 ```appspec.yml```도 아래와 같이 ```/nonstop/springboot-webservice/```로 변경합니다.
 
