@@ -712,11 +712,9 @@ rm ~/app/nonstop/springboot-webservice/build/libs/*.jar
 
 ```bash
 #!/bin/bash
-rm -rf /home/ec2-user/app/nonstop/springboot-webservice/*
 /home/ec2-user/app/nonstop/deploy.sh > /dev/null 2> /dev/null < /dev/null &
 ```
 
-* 기존에 배포된 ```springboot-webservice```를 삭제하고
 * ```travis```로 잡혀있던 deplosy.sh 디렉토리를 nonstop으로 변경합니다.
 
 그리고 프로젝트 폴더의 ```appspec.yml```도 아래와 같이 ```/nonstop/springboot-webservice/```로 변경합니다.
@@ -729,5 +727,20 @@ rm -rf /home/ec2-user/app/nonstop/springboot-webservice/*
 
 (좌측이 ```build.gradle```, 우측이 ```main.hbs```입니다.)  
   
-자! 모두다 수정하셨으면 git commit & push를 실행합니다.
+자! 모두다 수정하셨으면 git commit & push를 실행합니다.  
+브라우저를 열어 저희의 웹 사이트 주소로 접속해보시면!
+
+
+![deploy15](./images/7/deploy15.png)
+
+버전4로 정상적으로 전환되었습니다!  
+
+## 마무리
+
+어떠셨나요?  
+이제 저희는 배포하는 과정속에서도 **서비스 중단 없이** 됩니다!  
+굉장히 긴 과정이였는데 끝까지 와주셔서 감사합니다!  
+다음 시간엔 본격적으로 운영 환경 설정을 진행하겠습니다!  
+감사합니다!
+
 
