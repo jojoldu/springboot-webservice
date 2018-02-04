@@ -72,6 +72,29 @@ chmod a+x certbot-auto
 sudo ./certbot-auto --nginx
 ```
 
+### Let's Encrypt 인증서 갱신
+
+```bash
+crontab -e
+```
+
+```bash
+# Begin Let's encrypt renew
+0 4 1 */3 * /bin/bash -l -c '/home/ec2-user/certbot-auto renew --quiet --no-self-upgrade'
+# End Let's encrypt renew
+```
+
+### 인증서 갱신 중 오류 발생시
+
+```bash
+sudo rm -rf /root/.local/share/letsencrypt/
+sudo rm -rf /opt/eff.org/certbot/
+```
+
+```bash
+/home/ec2-user/certbot-auto renew -v --debug
+```
+
 ## 참고
 
 * [Amazon Linux에서 Certbot의 Let's Encrypt](https://docs.aws.amazon.com/ko_kr/AWSEC2/latest/UserGuide/SSL-on-an-instance.html#letsencrypt)
