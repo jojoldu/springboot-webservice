@@ -16,3 +16,18 @@ spring:
     console:
       enabled: true
 
+# 운영 환경
+---
+spring.profiles: set1
+spring.profiles.include: realdb
+
+server:
+  port: 8081
+
+---
+spring.profiles: set2
+spring.profiles.include: realdb
+
+server:
+  port: 8082
+
