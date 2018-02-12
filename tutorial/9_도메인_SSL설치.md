@@ -108,9 +108,83 @@ G Suite 비지니스 계정은 현재 14일 무료평가판을 사용중이며, 
 
 테스트 메일이 잘 도착합니다.  
 즉, 앞으로 서비스를 운영하면서 외부와 이메일을 주고 받을때는 이 비지니스 계정으로 진행하시면 되겠죠?
-
+자 그럼 이제 구매한 도메인을 AWS EC2에 연결해보겠습니다!
 
 ## 9-2. AWS Route 53 연결
+
+먼저 AWS의 [Route53](https://console.aws.amazon.com/route53/home)으로 이동합니다.
+
+![route1](./images/9/route1.png)
+
+좌측의 사이드바부터 시작해서 **Hosted zones** -> **Create Hosted Zone** -> 우측 사이드바의 **Domain Name**을 차례로 클릭 & 입력합니다.
+
+![route2](./images/9/route2.png)
+
+자 그럼 차례로 도메인을 추가해보겠습니다.
+
+### 9-2-1. EC2와 도메인 연결
+
+Hosted Zone이 생성되었으면 해당 Hosted Zone을 클릭합니다.
+
+![route3](./images/9/route3.png)
+
+그동안 배포해왔던 EC2 IP를 G Suite에서 구매한 도메인에 연결하겠습니다.  
+[EC2](https://ap-northeast-2.console.aws.amazon.com/ec2/v2/home?region=ap-northeast-2#Instances:sort=desc:instanceId)의 EIP를 복사해서
+
+![route4](./images/9/route4.png)
+
+**Create Record Set**을 클릭해 우측의 **Value**에 EIP를 붙여넣기 합니다.  
+여기서 **Name에는 아무것도 입력하지 않습니다**.
+
+![route5](./images/9/route5.png)
+
+Name에 아무것도 입력하지 않았기 때문에 ```springboot-webservice.com```이 EC2에 연결되었음을 알 수 있습니다.
+
+![route6](./images/9/route6.png)
+
+하나더 추가해서 이번엔 ```www.springboot-webservice.com```을 연결하겠습니다.
+
+![route7](./images/9/route7.png)
+
+그리고 Google에서 구매한 도메인의 Name Server를 AWS용으로 변경하겠습니다.  
+
+> Tip)  
+Name Server에 대한 좀 더 자세한 정보는 [생활코딩-네임서버](https://opentutorials.org/course/228/1455) 영상을 참고하시면 좋습니다!
+
+Route53 페이지를 보시면 저희가 등록한 것 외에 생성된 2개 값이 있는데요.  
+여기서 Type이 **NS** (Name Server)를 보시면 4개의 값들이 있습니다.  
+이게 AWS Name Server입니다.  
+
+![route8](./images/9/route8.png)
+
+이 값들을 복사해서 구글 도메인 서비스의 Name Server로 등록합니다.  
+[구글 도메인](https://domains.google.com/registrar)으로 접속하시면 다음과 같은 화면이 노출되는데요.
+
+![route9](./images/9/route9.png)
+
+**DNS**버튼을 클릭 하시면 다음과 같이 도메인에 대한 정보가 나옵니다.  
+
+![route10](./images/9/route10.png)
+
+여기서 **맞춤 네임서버 사용**을 선택하셔서 Route53에 있던 Name Server정보를 하나씩 등록합니다.
+
+![route11](./images/9/route11.png)
+
+자! 그리고 Name Server가 반영될 시간(약 1~2분) 기다리신뒤, 해당 도메인으로 접속해보시면!!
+
+![route12](./images/9/route12.png)
+
+드디어 저희 서비스가 외부에 오픈되었습니다!
+
+### 9-2-2. Google 이메일 연결
+
+
+![](./images/9/도메인등록1.png)
+![](./images/9/도메인등록2.png)
+![](./images/9/도메인등록3.png)
+![](./images/9/도메인등록4.png)
+![](./images/9/route53_1.png)
+
 
 ## 9-3. HTTPS 연결
 
