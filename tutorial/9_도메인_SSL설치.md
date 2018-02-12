@@ -1,9 +1,118 @@
 # 9. 도메인 구입 및 SSL 인증서 설치
 
-이번 시간엔 무중단 배포 환경을 구축하겠습니다.
+이번 시간엔 지금까지 만든 프로젝트에 도메인을 연결해보겠습니다.
 (모든 코드는 [Github](https://github.com/jojoldu/springboot-webservice/tree/feature/9)에 있습니다.)  
 
+저는 회사에서도 구글 계정으로 모든 처리를 진행하고 있어 연습 삼아 구글 호스팅 서비스를 사용하겠습니다.  
+다른 분들은 좀 더 저렴한 국내 서비스를 쓰셔도 됩니다.  
+이번 과정부터는 **비용이 직접 청구되니** 당장 서비스하실게 아니라면 꼭 안하셔도 됩니다!
+(준비물로 **Master** 혹은 **VISA 카드**가 하나 있어야 합니다.)
 
+## 9-1. G Suite 가입
+
+G Suite는 구글에서 제공하는 비지니스 서비스 입니다.  
+회사에서 사용하기 위한 이메일과 도메인, 구글 앱스등을 제공하는데요.  
+보통 회사에서 업무용 이메일을 구성원들에게 나눠주고, 회사내에서 사용할 문서들을 구글 드라이브에 올려서 사용하는 경우가 많은데요.  
+이럴때 사용하는 서비스라고 보시면 됩니다.
+여기서는 G Suite를 통해 비지니스 이메일 계정과 도메인 서비스를 이용하겠습니다.  
+  
+먼저 [링크](https://gsuite.google.com/intl/ko/)로 접속합니다.  
+아래와 같이 G Suite의 메인 페이지에서 **무료평가판 시작**을 클릭합니다.
+
+![gsuite1](./images/9/gsuite1.png)
+
+본인이 원하는 업체(서비스)이름을 등록하시고, 직원수는 1명으로 합니다.
+(직원수에 따라 비용이 변경되니 최저인원인 1명을 선택하세요)
+
+![gsuite2](./images/9/gsuite2.png)
+
+현재 사용중인 Email을 등록합니다.  
+G Suite로 생성할 비지니스 이메일에 관련된 정보나 비용 청구서를 받아볼 계정이니 개인 계정을 등록하시면 됩니다.
+
+![gsuite3](./images/9/gsuite3.png)
+
+현재 저희가 갖고 있는 도메인이 없기 때문에 우측을 선택합니다.  
+만약 갖고 계신 도메인이 있다면 해당 도메인을 쓰시면 됩니다.  
+여기선 G Suite에서 도메인 구입까지 한꺼번에 진행합니다.
+
+![gsuite4](./images/9/gsuite4.png)
+
+저는 ```sprinboot-webservice.com```으로 도메인을 구매했습니다.  
+이 글을 보시는 분들은 본인이 원하는 다른 도메인을 구매하시면 됩니다!  
+
+![gsuite5](./images/9/gsuite5.png)
+
+우측 버튼을 클릭해서 검색하시면 아래와 같이 사용가능 여부와 비용이 함께 보입니다.  
+선택한 도메인이 맞다면 **다음**을 클릭합니다.
+
+![gsuite6](./images/9/gsuite6.png)
+
+업체 정보 입력란이 나오면,  
+본인의 집 주소를 입력합니다.
+
+![gsuite7](./images/9/gsuite7.png)
+
+본인 이름을 등록하시고
+
+![gsuite8](./images/9/gsuite8.png)
+
+이제 사용하실 비지니스 이메일을 하나 생성합니다.  
+보통 관리자 계정은 noreply 혹은 no-reply로 되어있기 때문에 저 역시 여기에선 noreply로 하겠습니다.  
+이렇게 생성하시면 ```noreply@springboot-webservice.com```이란 이메일이 생성됩니다.
+
+![gsuite9](./images/9/gsuite9.png)
+
+도메인 구매를 진행하는데요.  
+보통 ```.com``` 도메인은 년간 12달러(즉, 한화 약 12,000원) 정도합니다.  
+크게 부담스러운 금액은 아니지만, 혹시나 테스트만 하신다면 나중에 자동갱신을 취소하셔야 합니다.
+
+![gsuite10](./images/9/gsuite10.png)
+
+약관에 동의하시고
+
+![gsuite11](./images/9/gsuite11.png)
+
+결제할 카드 정보를 등록합니다.
+
+![gsuite12](./images/9/gsuite12.png)
+
+개인 이메일 계정으로 도메인 구매 인증 메일이 도착했을테니 확인합니다.
+
+![gsuite13](./images/9/gsuite13.png)
+
+이메일 주소가 인증되셨으면 다시 원래 G Suite 가입 페이지로 가보시면 확인 안내가 있습니다.  
+**계속** 버튼을 클릭합니다.
+
+![gsuite14](./images/9/gsuite14.png)
+
+자 그럼 저희가 G Suite를 통해 구매한 내역이 나옵니다.
+
+![gsuite15](./images/9/gsuite15.png)
+
+G Suite 비지니스 계정은 현재 14일 무료평가판을 사용중이며, 도메인은 구매해서 년간 ```$12```로 청구될 예정입니다. (```$12```를 분할해서 매월 청구되는 방식입니다. 월 ```$1```가 되겠죠?)  
+  
+자 그럼 비지니스 이메일 계정이 잘 생성되었는지 확인해보겠습니다.  
+브라우저를 열어 구매한 비지니스 계정으로 로그인해봅니다.
+
+![gsuite16](./images/9/gsuite16.png)
+
+로그인이 잘 되네요!  
+자 그럼 이메일 수신도 잘되는지 한번 테스트 해봅니다.  
+
+![gsuite17](./images/9/gsuite17.png)
+
+개인 이메일로 방금 구매한 비지니스 이메일 계정에 테스트 메일을 발송해봅니다.  
+그러면!
+
+![gsuite18](./images/9/gsuite18.png)
+
+테스트 메일이 잘 도착합니다.  
+즉, 앞으로 서비스를 운영하면서 외부와 이메일을 주고 받을때는 이 비지니스 계정으로 진행하시면 되겠죠?
+
+
+## 9-2. AWS Route 53 연결
+
+## 9-3. HTTPS 연결
 
 ### Let's Encrypt 설치
 
@@ -97,4 +206,6 @@ sudo rm -rf /opt/eff.org/certbot/
 
 ## 참고
 
+* [Email 연결](https://blog.andrewray.me/setting-up-gsuite-gmail-custom-domains-with-aws-route53/)
 * [Amazon Linux에서 Certbot의 Let's Encrypt](https://docs.aws.amazon.com/ko_kr/AWSEC2/latest/UserGuide/SSL-on-an-instance.html#letsencrypt)
+
