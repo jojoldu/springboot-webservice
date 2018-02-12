@@ -178,13 +178,38 @@ Route53 페이지를 보시면 저희가 등록한 것 외에 생성된 2개 값
 
 ### 9-2-2. Google 이메일 연결
 
+한가지 문제가 생겼습니다.  
+구글 도메인의 Name Server를 AWS로 변경했기 때문에 구글에서 생성한 Email로 메일 수신이 안되게 되었습니다!  
+(테스트로 메일 다시 보내보시면 안되는걸 확인할 수 있습니다.)  
+그래서 이번엔 구글 Email을 AWS Route53에 등록하겠습니다.  
+**Create Record Set**을 클릭해서 새로운 Record Set을 등록합니다.
 
-![](./images/9/도메인등록1.png)
-![](./images/9/도메인등록2.png)
-![](./images/9/도메인등록3.png)
-![](./images/9/도메인등록4.png)
-![](./images/9/route53_1.png)
+![route13](./images/9/route13.png)
 
+* Type: MX
+* TTL: 3600
+* Value: 아래 내용 복사
+
+```
+1 ASPMX.L.GOOGLE.COM  
+5 ALT1.ASPMX.L.GOOGLE.COM  
+5 ALT2.ASPMX.L.GOOGLE.COM  
+10 ALT3.ASPMX.L.GOOGLE.COM  
+10 ALT4.ASPMX.L.GOOGLE.COM  
+```
+
+[구글 admin](https://admin.google.com/) 페이지로 이동합니다.  
+
+![route14](./images/9/route14.png)
+
+![route15](./images/9/route15.png)
+
+![route16](./images/9/route16.png)
+
+저렇게 에러가 발생하는 이유는 ```""```안의 내용이 너무 길기 때문입니다.  
+
+
+```
 
 ## 9-3. HTTPS 연결
 
