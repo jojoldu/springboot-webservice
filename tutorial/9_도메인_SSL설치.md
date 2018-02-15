@@ -198,7 +198,9 @@ Route53 페이지를 보시면 저희가 등록한 것 외에 생성된 2개 값
 10 ALT4.ASPMX.L.GOOGLE.COM  
 ```
 
-[구글 admin](https://admin.google.com/) 페이지로 이동합니다.  
+등록이 완료되셨으면, 다음으로 G Suite Mail Name Server를 등록하겠습니다.  
+먼저 [구글 admin](https://admin.google.com/) 페이지로 이동합니다.  
+아래 순서대로 페이지를 이동합니다.
 
 ![route14](./images/9/route14.png)
 
@@ -206,10 +208,65 @@ Route53 페이지를 보시면 저희가 등록한 것 외에 생성된 2개 값
 
 ![route16](./images/9/route16.png)
 
-저렇게 에러가 발생하는 이유는 ```""```안의 내용이 너무 길기 때문입니다.  
+![route17](./images/9/route17.png)
 
+이메일 인증을 클릭하시면 아래와 같이 2개의 값이 출력됩니다.  
+이 화면은 그대로 두고, AWS Route53 페이지로 이동합니다.
 
+![route18](./images/9/route18.png)
+
+Route 53페이지에서 **Create Record Set**을 클릭합니다.  
+여기서 좀전의 구글 이메일 도메인 설정창의 값을 하나씩 입력합니다.  
+
+* DNS 호스트 이름은 Route53의 Name으로
+* TXT 레코드값은 Route53의 Value로 
+* Type은 TXT-Text로
+
+복사합니다.
+
+![route19](./images/9/route19.png)
+
+그리고 **Create**를 클릭하시면!
+
+![route20](./images/9/route20.png)
+
+에러가 발생합니다.  
+메세지에서 나와있듯이 에러가 발생하는 이유는 ```""```안의 내용이 너무 길기 때문입니다.  
+그래서 ```""```을 좀 분리해서 넣겠습니다.  
+예를 들어 Value가 아래와 같다면
+
+```java
+"v=DKIM1; k=rsa;
+p=abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyz
+abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzab
+cdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabc"
 ```
+
+다음과 같이 ```""```로 문단을 나눠서 복사합니다.
+
+```java
+"v=DKIM1; k=rsa;
+p=abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyz"
+"abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzab"
+"cdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabc"
+```
+
+(이건 제 코드이기 때문에 각자 본인의 코드를 적당한 위치에서 ```""```로 분리하셔야 합니다.)  
+  
+```java
+"v=DKIM1; k=rsa; p=MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAi4cIuJwVEoHU3R66tUjH8q9i87/Q081PyTnpe8TrOZD2NTxAJU2Zav1n/NWWCYwILUa9ip14BoRGrwgXjWw5cf0KRxGeEt74Tc7OXMY2CMy2c5S5S9NctDMBO6ei3ehyJk""+iHJ6LvRDqmEnvwMoTBqBIa91G1dtUquGLhqSTpouzqxNpAb9V8TD8umiYWg4qJX5tIxgjYPCnqikxhUMgmtORJQhsJmDQkZKXwDty816""+3Nx9p/lDAQi85JchJ1PUIBrtWXlaN1irJu60WfTs0Yus0rIZq7NgXCxqzGKmBr6mOO+ewlloKkfCQmyebxtjIpovC/Vg3C3HjNTMwrKhwQIDAQAB"
+```
+
+그래서 최종 Record set은 다음처럼 됩니다
+
+![route21](./images/9/route21.png)
+
+자 이제 다시 G Suite 이메일로 메일을 발송해봅니다.  
+
+![route22](./images/9/route22.png)
+
+다시 보낸 메일이 잘 도착하셨나요!?  
+저희 서비스에 도메인 설정과 서비스 이메일 생성이 완료 되었습니다!
 
 ## 9-3. HTTPS 연결
 
