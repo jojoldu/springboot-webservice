@@ -8,7 +8,7 @@
 이번 과정부터는 **비용이 직접 청구되니** 당장 서비스하실게 아니라면 꼭 안하셔도 됩니다!
 (준비물로 **Master** 혹은 **VISA 카드**가 하나 있어야 합니다.)
 
-## 9-1. G Suite 가입
+## 9-1. 도메인 및 서비스 메일 생성
 
 G Suite는 구글에서 제공하는 비지니스 서비스 입니다.  
 회사에서 사용하기 위한 이메일과 도메인, 구글 앱스등을 제공하는데요.  
@@ -270,12 +270,19 @@ p=abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyz
 
 ## 9-3. HTTPS 연결
 
-### Let's Encrypt 설치
+자 도메인 작업이 완료 되었으니, 이번엔 HTTPS를 서비스에 등록해보겠습니다.  
+HTTPS가 없더라도 서비스에 문제는 없지만, 최근 동향이 **"HTTPS는 기본적으로 갖추자"**이기 때문에 이번 기회에 시작해보시는걸 추천드립니다.
 
-Nginx가 설치되었으니 우리 서비스의 보안을 위해 SSL 인증서를 설치하겠습니다. 
+> Tip)  
+[HTTPS는 HTTP보다 빠르다](https://tech.ssut.me/2017/05/07/https-is-faster-than-http/), 
+[구글 "네이버·다음은 왜 https 적용 안하나...크롬에서 경고 표시 띄울 것"](http://biz.chosun.com/site/data/html_dir/2017/02/13/2017021302077.html)
+등 웹 사이트에서 HTTPS 사용을 최소한의 기초로 보자는 움직임이 많습니다.  
 
 > Tip)  
 HTTP와 HTTPS에 대한 차이점을 알고싶으신 분들은 [HTTP 프로토콜 - joinc](https://www.joinc.co.kr/w/Site/Network_Programing/AdvancedComm/HTTP#s-5.)를 참고하시거나 가장 추천하는 네트워크 교재인 [그림으로 배우는 HTTP & Network Basic](http://www.kyobobook.co.kr/product/detailViewKor.laf?barcode=9788931447897)를 읽어보시면  좋습니다!
+
+
+### 9-3-1. Let's Encrypt 설치
 
 예전에는 비용을 지불해서 유료 인증서를 구입했지만, 최근 오픈소스 인증서인 [Let's Encrypt](https://blog.outsider.ne.kr/1178)가 등장해서 무료로 HTTPS를 사용할수 있게 되었습니다.  
 특히 Let's Encrypt 설치 및 업데이트를 쉽게 해주는 certbot이 등장해서 사용하기도 굉장히 수월해졌습니다.  
@@ -337,7 +344,7 @@ chmod a+x certbot-auto
 sudo ./certbot-auto --nginx
 ```
 
-### Let's Encrypt 인증서 갱신
+### Let's Encrypt 인증서 자동 갱신 등록
 
 ```bash
 crontab -e
