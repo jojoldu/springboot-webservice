@@ -44,7 +44,8 @@ Java는 대부분 로컬에서 CRUD & localhost:8080으로 게시판 구축하�
 6. [TravisCI & AWS CodeDeploy로 CI환경 구축하기](http://jojoldu.tistory.com/265)
 7. [Nginx로 무중단 배포 구축하기](http://jojoldu.tistory.com/267)
 8. [스프링부트 운영 환경 설정](http://jojoldu.tistory.com/269)
-9. Google GSuite & AWS로 도메인, Email 할당 받기
+9. [Google GSuite & AWS로 도메인, Email 할당 받기, 타임존 수정](http://jojoldu.tistory.com/270)
+10. 초기 웹 서비스를 구축할때 알았으면 좋았을 팁들
 
 진행함에 따라 조금씩 변경이 있을수도 있습니다.  
 (책이 아닌 블로그의 장점!?)  
